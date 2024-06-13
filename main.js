@@ -1,3 +1,4 @@
+// import {Howl, Howler} from 'howler';
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -28,14 +29,30 @@ var fly = new Image();
 fly.src = "images/fly.png";
 var mario = new Image();
 mario.src = "images/mario.png";
+var drawHitboxes = false;
 var scale = 3;
-var swing = new Audio("sounds/gnatattack_swing.wav");
-var hit = new Audio("sounds/gnatattack_hit.wav");
-var flysound = new Audio("sounds/gnatattack_bugdie1.wav");
-var flyoffscreen = new Audio("sounds/gnatattack_bugoffscreen1.wav");
-var mariohit = new Audio("sounds/yoshi-spit.wav");
-var mariooffscreen = new Audio("sounds/bullet.wav");
-var level1music = new Audio("sounds/level1music.mp3");
+var swing = new Howl({
+    src: ["sounds/gnatattack_swing.wav"]
+});
+var hit = new Howl({
+    src: ["sounds/gnatattack_hit.wav"]
+});
+var flysound = new Howl({
+    src: ["sounds/gnatattack_bugdie1.wav"]
+});
+var flyoffscreen = new Howl({
+    src: ["sounds/gnatattack_bugoffscreen1.wav"]
+});
+var mariohit = new Howl({
+    src: ["sounds/yoshi-spit.wav"]
+});
+var mariooffscreen = new Howl({
+    src: ["sounds/bullet.wav"]
+});
+var level1music = new Howl({
+    src: ["sounds/level1music.mp3"],
+    html5: true
+});
 var gameSpawn = false;
 document.addEventListener('mousemove', onMouseUpdate, false);
 document.addEventListener('mouseenter', onMouseUpdate, false);
@@ -45,6 +62,11 @@ var Enemy = /** @class */ (function () {
     function Enemy() {
     }
     Enemy.prototype.render = function () {
+        if (drawHitboxes) {
+            context.fillStyle = 'rgba(0,255,0,0.5)';
+            context.fillRect(this.x, this.y, this.w * scale, this.h * scale);
+            context.fillStyle = 'rgba(255,255,255,1.0)';
+        }
         context.drawImage(this.image, this.frame * this.w, 0, this.w, this.h, this.x, this.y, this.w * scale, this.h * scale); // |0 in the math ensures 32bit int
     };
     return Enemy;
@@ -168,17 +190,17 @@ var Mario = /** @class */ (function (_super) {
 var enemies = [new Mario(window.innerWidth + 16, 240)];
 function mousedown(e) {
     if (e.button == 0) {
-        swing.cloneNode(true).play();
+        (swing).play();
         mousetimer = 24;
         enemies.forEach(function (enemy) {
-            if (enemy.x < mousex + 16 * scale &&
+            if (enemy.x < mousex + 24 * scale &&
                 enemy.x + enemy.w * scale > mousex &&
-                enemy.y < mousey - (6 * scale) + 16 * scale &&
-                enemy.y + enemy.h * scale > mousey - 12) {
+                enemy.y < mousey - (6 * scale) + 21 * scale &&
+                enemy.y + enemy.h * scale > mousey - (6 * scale)) {
                 mousetimer = 40;
                 hitEnemy = true;
                 enemy.alive = false;
-                enemy.hitsound.cloneNode(true).play();
+                (enemy.hitsound).play();
             }
         });
         mouseframes = (mousetimer / 8) - 1;
@@ -197,14 +219,14 @@ function logic(delta) {
     enemies.forEach(function (enemy) {
         enemy.logic(delta);
         if (!enemy.active) {
-            enemy.deathsound.cloneNode(true).play();
+            (enemy.deathsound).play();
             enemies.splice(enemies.indexOf(enemy), 1);
         }
     });
     if (mousetimer > 0) {
         mousetimer -= delta * 0.2;
         if (mousetimer <= 16 && hitEnemy) {
-            hit.cloneNode(true).play();
+            (hit).play();
             hitEnemy = false;
         }
     }
@@ -230,6 +252,11 @@ function draw() {
     }
     else {
         context.drawImage(flyswatter, 0, 0, 32, 64, mousex - 16, mousey - 24, 32 * scale, 64 * scale); // |0 in the math ensures 32bit int
+    }
+    if (drawHitboxes) {
+        context.fillStyle = 'rgba(255,0,0,0.5)';
+        context.fillRect(mousex, mousey - (6 * scale), (21 * scale), (24 * scale));
+        context.fillStyle = 'rgba(0,0,0,1.0)';
     }
 }
 function loop(timestamp) {
