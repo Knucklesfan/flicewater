@@ -16,6 +16,11 @@ var __extends = (this && this.__extends) || (function () {
 })();
 var mousex = 0;
 var mousey = 0;
+var textTimer = 0;
+var textx = 0;
+var level = 1;
+var swatted = 0;
+var gameStart = false;
 var hitEnemy = false;
 var mousepressed = false;
 var mousetimer = 0;
@@ -29,6 +34,10 @@ var fly = new Image();
 fly.src = "images/fly.png";
 var mario = new Image();
 mario.src = "images/mario.png";
+var digits = new Image();
+digits.src = "images/digits.png";
+var levelText = new Image();
+levelText.src = "images/level.png";
 var drawHitboxes = false;
 var scale = 3;
 var swing = new Howl({
@@ -98,6 +107,7 @@ var Fly = /** @class */ (function (_super) {
                 this.y += 12 * (delta / 16);
             }
             else {
+                swatted++;
                 this.active = false;
             }
         }
@@ -179,7 +189,7 @@ var Mario = /** @class */ (function (_super) {
                 this.x -= 2;
             }
             else {
-                gameSpawn = true;
+                gameStart = true;
                 level1music.play();
                 this.active = false;
             }
@@ -188,6 +198,19 @@ var Mario = /** @class */ (function (_super) {
     return Mario;
 }(Enemy));
 var enemies = [new Mario(window.innerWidth + 16, 240)];
+function renderdigit(digit, x, y, center) {
+    var string = digit.toString();
+    if (center) {
+        for (var i = 0; i < string.length; i++) {
+            context.drawImage(digits, 0 + 16 * (parseInt(string.charAt(i))), 0, 16, 16, (x - (string.length / 2) * scale) + i * 16 * scale, y, 16 * scale, 16 * scale); // |0 in the math ensures 32bit int
+        }
+    }
+    else {
+        for (var i = 0; i < string.length; i++) {
+            context.drawImage(digits, 0 + 16 * (parseInt(string.charAt(i))), 0, 16, 16, x + i * 16 * scale, y, 16 * scale, 16 * scale); // |0 in the math ensures 32bit int
+        }
+    }
+}
 function mousedown(e) {
     if (e.button == 0) {
         (swing).play();
@@ -223,6 +246,20 @@ function logic(delta) {
             enemies.splice(enemies.indexOf(enemy), 1);
         }
     });
+    if (gameStart && !gameSpawn) {
+        if (textTimer == 0 && textx < (window.innerWidth / 2) - (10 * scale)) {
+            textx += delta;
+        }
+        else if (textTimer < 500) {
+            textTimer += delta / 8;
+        }
+        else if (textx > 0 && textTimer > 500) {
+            textx -= delta;
+        }
+        else {
+            gameSpawn = true;
+        }
+    }
     if (mousetimer > 0) {
         mousetimer -= delta * 0.2;
         if (mousetimer <= 16 && hitEnemy) {
@@ -257,6 +294,11 @@ function draw() {
         context.fillStyle = 'rgba(255,0,0,0.5)';
         context.fillRect(mousex, mousey - (6 * scale), (21 * scale), (24 * scale));
         context.fillStyle = 'rgba(0,0,0,1.0)';
+    }
+    context.drawImage(levelText, textx - (40 * scale), 240, (40 * scale), (16 * scale));
+    renderdigit(level, window.innerWidth - textx, 240, false);
+    if (gameSpawn) {
+        renderdigit(swatted, window.innerWidth / 2, 100, true);
     }
 }
 function loop(timestamp) {
