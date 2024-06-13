@@ -21,6 +21,7 @@ var textx = 0;
 var level = 1;
 var swatted = 0;
 var gameStart = false;
+var gamePause = false;
 var hitEnemy = false;
 var mousepressed = false;
 var mousetimer = 0;
@@ -38,8 +39,13 @@ var digits = new Image();
 digits.src = "images/digits.png";
 var levelText = new Image();
 levelText.src = "images/level.png";
+var oneupSprite = new Image();
+oneupSprite.src = "images/oneup.png";
 var drawHitboxes = false;
 var scale = 3;
+var oneupDeath = new Howl({
+    src: ["sounds/1up.wav"]
+});
 var swing = new Howl({
     src: ["sounds/gnatattack_swing.wav"]
 });
@@ -107,7 +113,9 @@ var Fly = /** @class */ (function (_super) {
                 this.y += 12 * (delta / 16);
             }
             else {
-                swatted++;
+                if (gameSpawn) {
+                    swatted++;
+                }
                 this.active = false;
             }
         }
@@ -146,6 +154,31 @@ var Fly = /** @class */ (function (_super) {
         }
     };
     return Fly;
+}(Enemy));
+var oneUp = /** @class */ (function (_super) {
+    __extends(oneUp, _super);
+    function oneUp() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.w = 16;
+        _this.h = 16;
+        _this.hitsound = hit;
+        _this.deathsound = oneupDeath;
+        _this.image = oneupSprite;
+        return _this;
+    }
+    oneUp.prototype.logic = function (delta) {
+        if (this.y <= window.innerHeight / 2) {
+            this.y = window.innerHeight;
+        }
+        else {
+            this.y -= delta / 32.0;
+        }
+        if (!this.alive) {
+            this.active = false;
+            gameSpawn = true;
+        }
+    };
+    return oneUp;
 }(Enemy));
 var Mario = /** @class */ (function (_super) {
     __extends(Mario, _super);
@@ -246,7 +279,7 @@ function logic(delta) {
             enemies.splice(enemies.indexOf(enemy), 1);
         }
     });
-    if (gameStart && !gameSpawn) {
+    if (gameStart && !gameSpawn && !gamePause && enemies.length == 0) {
         if (textTimer == 0 && textx < (window.innerWidth / 2) - (10 * scale)) {
             textx += delta;
         }
@@ -258,6 +291,8 @@ function logic(delta) {
         }
         else {
             gameSpawn = true;
+            textx = 0;
+            textTimer = 0;
         }
     }
     if (mousetimer > 0) {
@@ -272,6 +307,17 @@ function logic(delta) {
         enemies.push(new Fly(Math.random() * window.innerWidth, window.innerHeight));
         enemies.push(new Fly(window.innerWidth, Math.random() * window.innerHeight));
         enemies.push(new Fly(0, Math.random() * window.innerHeight));
+    }
+    if (swatted % 50 == 0 && gameStart) {
+        gameSpawn = false;
+        swatted++;
+        level++;
+        enemies.forEach(function (enemy) {
+            enemy.alive = false;
+            // gamePause = true;
+        });
+    }
+    if (!gameSpawn && gamePause) {
     }
 }
 function draw() {
