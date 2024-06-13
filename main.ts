@@ -1,10 +1,11 @@
-// import {Howl, Howler} from 'howler';
+// import {Howl, Howler} from './howler.min.js';
 
 var mousex = 0;
 var mousey = 0;
 var textTimer = 0;
 var textx = 0;
 var level = 1;
+var lives = 0;
 var swatted = 0;
 var gameStart:boolean = false;
 var gamePause:boolean = false;
@@ -27,10 +28,11 @@ const levelText = new Image();
 levelText.src = "images/level.png";
 const oneupSprite = new Image();
 oneupSprite.src = "images/oneup.png";
+const extralife = new Image();
+extralife.src = "images/extralife.png";
 
 var drawHitboxes = false;
 var scale = 3;
-
 var oneupDeath = new Howl({
     src:["sounds/1up.wav"]});
 var swing = new Howl({
@@ -54,6 +56,28 @@ document.addEventListener('mousemove', onMouseUpdate, false);
 document.addEventListener('mouseenter', onMouseUpdate, false);
 document.addEventListener('mousedown', mousedown, false);
 document.addEventListener('mouseup', mouseup, false);
+
+function easeOutBounce(x: number): number {
+    const n1 = 7.5625;
+    const d1 = 2.75;
+    
+    if (x < 1 / d1) {
+        return n1 * x * x;
+    } else if (x < 2 / d1) {
+        return n1 * (x -= 1.5 / d1) * x + 0.75;
+    } else if (x < 2.5 / d1) {
+        return n1 * (x -= 2.25 / d1) * x + 0.9375;
+    } else {
+        return n1 * (x -= 2.625 / d1) * x + 0.984375;
+    }
+    
+}
+function lerp(a:number, b:number, t:number)    {
+    if (t <= 0.5)
+        return a+(b-a)*t;
+    else
+        return b-(b-a)*(1.0-t);
+}
 abstract class Enemy {
     x: number
     y: number
@@ -91,7 +115,7 @@ class Fly extends Enemy {
                 this.y+=12*(delta/16);
             }
             else {
-                if(gameSpawn) {
+                if(gameSpawn && !gamePause) {
                     swatted++;
                 }
                 this.active = false;
@@ -145,24 +169,81 @@ class Fly extends Enemy {
 
 }
 class oneUp extends Enemy {
+    alive = true;
+    active = true;
+    hitable = true;
+    lifedup = false;
+    lifeuptimer = 0;
+    showhudtimer = 0;
+    oldmousex = 0;
+    oldmousey = 0;
     logic(delta: any): void {
-        if(this.y <= window.innerHeight/2) {
-            this.y = window.innerHeight
+        if(this.y >= window.innerHeight/2) {
+            this.y = window.innerHeight/2
         }
         else {
-            this.y-=delta/32.0;
+            this.y+=delta/4.0;
         }
-        if(!this.alive) {
-            this.active = false;
+        if(!this.alive && this.lifeuptimer <= 0 && this.hitable) {
+            this.lifeuptimer = 1;
+            this.hitable = false;
+            this.frame = -1;
+        }
+        
+
+        if(this.lifeuptimer >= 0) {
+
+            this.lifeuptimer -= delta/1000.0
+
+        }
+        else if(this.lifeuptimer <= 0 && !this.alive && !this.lifedup) {
+            this.lifeuptimer == 0;
+            this.showhudtimer = 1;
+            this.oldmousex = mousex;
+            this.oldmousey = mousey;
+            this.lifedup = true;
+        }
+        if(this.showhudtimer >= 0) {
+            this.showhudtimer -= delta/1000.0;
+        }
+        if(this.showhudtimer <= 0 && !this.alive && this.lifedup) {
+            this.showhudtimer = 0;
+            gamePause = false;
             gameSpawn = true;
+            this.active = false;
+            lives = 4;
         }
+
     }
     w = 16;
     h = 16;
+    frame = 0;
     hitsound = hit;
     deathsound = oneupDeath
     image = oneupSprite;
+    render() {
+        super.render();
+        if(!this.alive && this.showhudtimer <= 0) {
+            context!.drawImage(extralife,0,0,16,16,mousex+Math.cos((this.lifeuptimer*360)*Math.PI/180)*this.lifeuptimer*window.innerWidth,mousey+Math.sin(this.lifeuptimer*360*Math.PI/180)*this.lifeuptimer*window.innerHeight,16*scale,16*scale); // |0 in the math ensures 32bit int
+            context!.drawImage(extralife,0,0,16,16,mousex-Math.cos(this.lifeuptimer*360*Math.PI/180)*this.lifeuptimer*window.innerWidth,mousey-Math.sin(this.lifeuptimer*360*Math.PI/180)*this.lifeuptimer*window.innerHeight,16*scale,16*scale); // |0 in the math ensures 32bit int
+            context!.drawImage(extralife,0,0,16,16,mousex+Math.cos(this.lifeuptimer*360*Math.PI/180)*this.lifeuptimer*window.innerWidth,mousey-Math.sin(this.lifeuptimer*360*Math.PI/180)*this.lifeuptimer*window.innerHeight,16*scale,16*scale); // |0 in the math ensures 32bit int
+            context!.drawImage(extralife,0,0,16,16,mousex-Math.cos(this.lifeuptimer*360*Math.PI/180)*this.lifeuptimer*window.innerWidth,mousey+Math.sin(this.lifeuptimer*360*Math.PI/180)*this.lifeuptimer*window.innerHeight,16*scale,16*scale); // |0 in the math ensures 32bit int    
+        }
+        if(this.showhudtimer > 0) {
+            
+            context!.drawImage(extralife,0,0,16,16,lerp(this.oldmousex,(window.innerWidth/2)-(4/2)*16*scale+ 0*scale,1-this.showhudtimer),lerp(this.oldmousey,64,easeOutBounce(1-this.showhudtimer)),16*scale,16*scale); // |0 in the math ensures 32bit int
+            context!.drawImage(extralife,0,0,16,16,lerp(this.oldmousex,(window.innerWidth/2)-(4/2)*16*scale+16*scale,1-this.showhudtimer),lerp(this.oldmousey,64,easeOutBounce(1-this.showhudtimer)),16*scale,16*scale); // |0 in the math ensures 32bit int
+            context!.drawImage(extralife,0,0,16,16,lerp(this.oldmousex,(window.innerWidth/2)-(4/2)*16*scale+32*scale,1-this.showhudtimer),lerp(this.oldmousey,64,easeOutBounce(1-this.showhudtimer)),16*scale,16*scale); // |0 in the math ensures 32bit int
+            context!.drawImage(extralife,0,0,16,16,lerp(this.oldmousex,(window.innerWidth/2)-(4/2)*16*scale+48*scale,1-this.showhudtimer),lerp(this.oldmousey,64,easeOutBounce(1-this.showhudtimer)),16*scale,16*scale); // |0 in the math ensures 32bit int
 
+        }
+
+    }
+    constructor(x:number,y:number) {
+        super();
+        this.x=x;
+        this.y=y;
+    }
     
 }
 class Mario extends Enemy {
@@ -221,7 +302,7 @@ function renderdigit(digit:number,x:number,y:number,center:boolean) {
 
     if(center) {
         for(var i = 0; i < string.length; i++) {
-            context!.drawImage(digits,0+16*(parseInt(string.charAt(i))),0,16,16,(x-(string.length/2)*scale)+i*16*scale,y,16*scale,16*scale); // |0 in the math ensures 32bit int
+            context!.drawImage(digits,0+16*(parseInt(string.charAt(i))),0,16,16,(x-(string.length/2)*16*scale)+i*16*scale,y,16*scale,16*scale); // |0 in the math ensures 32bit int
         }
     }
     else {
@@ -298,20 +379,34 @@ function logic(delta) {
         }
     }
     if(gameSpawn && enemies.length < 4) {
-        enemies.push(new Fly(Math.random()*window.innerWidth,0))
-        enemies.push(new Fly(Math.random()*window.innerWidth,window.innerHeight))
-        enemies.push(new Fly(window.innerWidth,Math.random()*window.innerHeight))
-        enemies.push(new Fly(0,Math.random()*window.innerHeight))
+        const corners = [[0,0],[window.innerWidth,0],[0,window.innerHeight],[window.innerWidth,window.innerHeight]]
+        for(var i =0; i < Math.floor(Math.random()*4)+1; i++) {
+            const corner = corners[Math.floor(Math.random()*4)];
+            var side = Math.floor(Math.random() * 2);
+            enemies.push(new Fly(corner[0]*side,corner[1]*(1-side))); //not having this in a loop because this is guaranteed every time
+
+        }
+
+        if(swatted > 25) {
+            for(var i =0; i < 4; i++) {
+                const corner = corners[Math.floor(Math.random()*4)];
+                var side = Math.floor(Math.random() * 2);
+                enemies.push(new Fly(corner[0]*side,corner[1]*(1-side))); //not having this in a loop because this is guaranteed every time
+    
+            }
+        }
+
 
     }
-    if(swatted % 50 == 0 && gameStart) {
+    if(swatted == 25 && gameStart && gameSpawn) {
         gameSpawn = false;
         swatted++;
-        level++;
         enemies.forEach(function(enemy) {
             enemy.alive = false;
-            // gamePause = true;
-        });    
+            gamePause = true;
+        });   
+        enemies.push(new oneUp(window.innerWidth/2,0));
+ 
     }
     if(!gameSpawn && gamePause) {
 
@@ -344,7 +439,13 @@ function draw() {
     context!.drawImage(levelText,textx-(40*scale),240,(40*scale),(16*scale));
     renderdigit(level,window.innerWidth-textx,240,false)
     if(gameSpawn) {
-        renderdigit(swatted,window.innerWidth/2,100,true);
+        renderdigit(swatted,window.innerWidth/2,20,true);
+    }
+    if(lives > 0) {
+        for(var i = 0; i < lives; i++) {
+            context!.drawImage(extralife,0,0,16,16,(window.innerWidth/2)-((lives/2)*16*scale) + i*16*scale,64,16*scale,16*scale); // |0 in the math ensures 32bit int
+        }
+
     }
 }
 
