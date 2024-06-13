@@ -13,7 +13,7 @@ const fly = new Image();
 fly.src = "images/fly.png";
 const mario = new Image();
 mario.src = "images/mario.png";
-
+var scale = 3;
 var swing = new Audio("sounds/gnatattack_swing.wav");
 var hit = new Audio("sounds/gnatattack_hit.wav"); 
 var flysound = new Audio("sounds/gnatattack_bugdie1.wav"); 
@@ -38,9 +38,9 @@ abstract class Enemy {
     active: boolean;
     image: HTMLImageElement;
     render(): void {
-        context!.drawImage(this.image,this.frame*this.w,0,this.w,this.h,this.x,this.y,this.w*2,this.h*2); // |0 in the math ensures 32bit int
+        context!.drawImage(this.image,this.frame*this.w,0,this.w,this.h,this.x,this.y,this.w*scale,this.h*scale); // |0 in the math ensures 32bit int
     }
-    abstract logic(): void
+    abstract logic(delta): void
 }
 class Fly extends Enemy {
     image: HTMLImageElement = fly;
@@ -52,20 +52,20 @@ class Fly extends Enemy {
     hitsound: HTMLAudioElement = flysound;
     deathsound: HTMLAudioElement = flyoffscreen;
     firstRotationDone = false;
-    logic(): void {
+    logic(delta): void {
         if(!this.alive) {
             if(this.y < window.innerHeight) {
-                this.y+=12;
+                this.y+=12*(delta/16);
             }
             else {
                 this.active = false;
             }
         }
         else {
-            console.log(this.timer);
+            console.log(delta);
             this.x += Math.cos(this.timer*(Math.PI/180))*this.xradius;
             this.y += Math.sin(this.timer*(Math.PI/180))*this.yradius;
-            this.timer+=1;
+            this.timer+=(delta/16);
             if((this.x <= 0) && this.firstRotationDone) {
                 this.xradius = -this.xradius;
                 this.x = 1;
@@ -77,23 +77,23 @@ class Fly extends Enemy {
 
             if((this.y+this.h*2 >= window.innerHeight-8) && this.firstRotationDone) {
                 this.yradius = -this.yradius;
-                this.y = window.innerHeight-9-this.h*2
+                this.y = window.innerHeight-9-this.h*scale
             }
             if((this.x+this.w*2 >= window.innerWidth-8) && this.firstRotationDone) {
                 this.xradius = -this.xradius;
-                this.x = window.innerWidth-9-this.w*2
+                this.x = window.innerWidth-9-this.w*scale
             }
 
             if(this.timer >= 90 || this.timer <= -(90)) {
                 if(!this.firstRotationDone) {this.firstRotationDone = true;}
                 this.timer = 0;
                 do {
-                    this.xradius = (1-(Math.random()*2))*2
-                    this.yradius = (1-(Math.random()*2))*2
+                    this.xradius = (1-(Math.random()*2))*4
+                    this.yradius = (1-(Math.random()*2))*4
                 }
                 while(!(this.yradius > 1 || this.yradius < -1) && !(this.xradius > 3 || this.xradius < -3));
             }
-            this.frame=(this.timer%2)|0;
+            this.frame = (((this.timer*(delta*0.25))>>0)%2)
         }
         
     }
@@ -116,11 +116,11 @@ class Mario extends Enemy {
     image = mario;
     hitsound = mariohit;
     deathsound = mariooffscreen;
-    logic(): void {
+    logic(delta): void {
         if(this.alive && this.active) {
             console.log(this.x);
             if(this.x > window.innerWidth/2) {
-                this.xvel = -1;
+                this.xvel = -0.25;
             }
             else {
                 this.xvel = 0;
@@ -131,13 +131,13 @@ class Mario extends Enemy {
             else {
                 this.frame = 3;
             }
-            this.x+=this.xvel;
-            this.timer+=0.05;    
+            this.x+=this.xvel*delta;
+            this.timer+=0.05*(delta/16);    
         }
         else {
             this.frame = 2;
             if(this.y < window.innerHeight) {
-                this.y+=6;
+                this.y+=delta;
                 this.x-=2
             }
             else {
@@ -166,10 +166,10 @@ function mousedown(e) {
         mousetimer = 24;
         enemies.forEach(function(enemy) {
             if(
-                enemy.x < mousex + 32 &&
-                enemy.x + enemy.w > mousex &&
-                enemy.y < mousey-12 + 32 &&
-                enemy.y + enemy.h > mousey-12
+                enemy.x < mousex + 16*scale &&
+                enemy.x + enemy.w*scale > mousex &&
+                enemy.y < mousey-(6*scale) + 16*scale &&
+                enemy.y + enemy.h*scale > mousey-12
             ) {
                 mousetimer=40;
                 hitEnemy = true;
@@ -192,9 +192,9 @@ function onMouseUpdate(e) {
   mousex = e.pageX;
   mousey = e.pageY;
 }
-function logic() {
+function logic(delta) {
     enemies.forEach(function(enemy) {
-        enemy.logic();
+        enemy.logic(delta);
         if(!enemy.active) {
             (enemy.deathsound.cloneNode(true) as HTMLAudioElement).play();
             enemies.splice(enemies.indexOf(enemy),1);
@@ -202,7 +202,7 @@ function logic() {
     });
 
     if(mousetimer > 0) {
-        mousetimer--;
+        mousetimer-=delta*0.2;
         if(mousetimer <= 16 && hitEnemy) {
             (hit.cloneNode(true) as HTMLAudioElement).play();
             hitEnemy = false;
@@ -229,17 +229,17 @@ function draw() {
     });
     // context!.fillRect(mousex,mousey,32,32);
     if(mousetimer > 0) {
-        context!.drawImage(flyswatter,0+32*(mouseframes-(mousetimer/8>>0)),0,32,64,mousex-16,mousey-24,64,128); // |0 in the math ensures 32bit int
+        context!.drawImage(flyswatter,0+32*(mouseframes-(mousetimer/8>>0)),0,32,64,mousex-16,mousey-24,32*scale,64*scale); // |0 in the math ensures 32bit int
     }
     else {
-        context!.drawImage(flyswatter,0,0,32,64,mousex-16,mousey-24,64,128); // |0 in the math ensures 32bit int
+        context!.drawImage(flyswatter,0,0,32,64,mousex-16,mousey-24,32*scale,64*scale); // |0 in the math ensures 32bit int
 
     }
 }
 
 function loop(timestamp) {
     var progress = timestamp - lastRender
-    logic();
+    logic(progress);
     draw();
   
     lastRender = timestamp
