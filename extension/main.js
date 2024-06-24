@@ -73,103 +73,103 @@ var congrats;
 var levelMusics;
 var canvas;
 var context;
-function loadFlice() {
+function loadFlice(urls) {
     canvas = document.getElementById("canvas2d");
     context = canvas.getContext("2d");
-    flyswatter.src = 'images/cursor.png';
-    fly.src = "images/fly.png";
-    shitter.src = "images/shitter.png";
-    mario.src = "images/mario.png";
-    luigi.src = "images/luigi.png";
+    flyswatter.src = urls[0];
+    fly.src = urls[1];
+    shitter.src = urls[2];
+    mario.src = urls[3];
+    luigi.src = urls[4];
     levelbackgrounds = [
-        "images/level1bg.png", "images/level2bg.png", "images/level3bg.png", "images/level4bg.png", "images/level5bg.png", "images/level6bg.png"
+        urls[5], urls[6], urls[7], urls[8], urls[9], urls[10]
     ];
-    digits.src = "images/digits.png";
-    levelText.src = "images/level.png";
-    gameoverText.src = "images/gameover.png";
-    oneupSprite.src = "images/oneup.png";
-    extralife.src = "images/extralife.png";
+    digits.src = urls[11];
+    levelText.src = urls[12];
+    gameoverText.src = urls[13];
+    oneupSprite.src = urls[14];
+    extralife.src = urls[15];
     firstStart = true;
     drawHitboxes = false;
     scale = 3;
     oneupDeath = new Howl({
-        src: ["sounds/1up.wav"]
+        src: [urls[16]]
     });
     swing = new Howl({
-        src: ["sounds/gnatattack_swing.wav"]
+        src: [urls[17]]
     });
     hit = new Howl({
-        src: ["sounds/gnatattack_hit.wav"]
+        src: [urls[18]]
     });
     die = new Howl({
-        src: ["sounds/gnatattack_die.wav"]
+        src: [urls[19]]
     });
     grow = new Howl({
-        src: ["sounds/mariogrow.wav"]
+        src: [urls[20]]
     });
     checkpoint = new Howl({
-        src: ["sounds/checkpoint.wav"]
+        src: [urls[21]]
     });
     flysound = new Howl({
-        src: ["sounds/gnatattack_bugdie1.wav"]
+        src: [urls[22]]
     });
     flyoffscreen = new Howl({
-        src: ["sounds/gnatattack_bugoffscreen1.wav"]
+        src: [urls[23]]
     });
     mariohit = new Howl({
-        src: ["sounds/yoshi-spit.wav"]
+        src: [urls[24]]
     });
     mariooffscreen = new Howl({
-        src: ["sounds/bullet.wav"]
+        src: [urls[25]]
     });
     shitterhit = new Howl({
-        src: ["sounds/gnatattack_bugdie2.wav"]
+        src: [urls[26]]
     });
     shitteroffscreen = new Howl({
-        src: ["sounds/gnatattack_bugoffscreen2.wav"]
+        src: [urls[27]]
     });
     littleshits = new Howl({
-        src: ["sounds/gnatattack_minibugs.wav"]
+        src: [urls[28]]
     });
     lifenotif = new Howl({
-        src: ["sounds/gnatattack_extralife.wav"]
+        src: [urls[19]]
     });
-    level1music = new Audio('sounds/level1music.mp3');
+    level1music = new Audio(urls[20]);
     level1music.addEventListener('ended', function () {
         this.currentTime = 0;
         this.play();
     }, false);
-    level2music = new Audio('sounds/level2music.mp3');
+    level2music = new Audio(urls[21]);
     level2music.addEventListener('ended', function () {
         this.currentTime = 0;
         this.play();
     }, false);
-    level3music = new Audio('sounds/level3music.mp3');
+    level3music = new Audio(urls[22]);
     level3music.addEventListener('ended', function () {
         this.currentTime = 0;
         this.play();
     }, false);
-    level4music = new Audio('sounds/level4music.mp3');
+    level4music = new Audio(urls[23]);
     level4music.addEventListener('ended', function () {
         this.currentTime = 0;
         this.play();
     }, false);
-    level5music = new Audio('sounds/level5music.mp3');
+    level5music = new Audio(urls[24]);
     level5music.addEventListener('ended', function () {
         this.currentTime = 0;
         this.play();
     }, false);
-    level6music = new Audio('sounds/level6music.mp3');
+    level6music = new Audio(urls[25);
     level6music.addEventListener('ended', function () {
         this.currentTime = 0;
         this.play();
     }, false);
     levelMusics = [level1music, level2music, level3music, level4music, level5music, level6music];
     gameover = new Howl({
-        src: ["sounds/gameover.mp3"],
+        src: [urls[26]],
     });
     congrats = new Howl({
-        src: ["sounds/gnatattack_levelcomplete.wav"],
+        src: [urls[27]],
     });
     gameSpawn = false;
     document.addEventListener('mousemove', onMouseUpdate, false);

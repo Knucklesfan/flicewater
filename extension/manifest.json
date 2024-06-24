@@ -1,0 +1,21 @@
+ 
+{
+  "manifest_version": 2,
+  "name": "Flice Water",
+  "version": "1.0",
+
+  "description": "Lets you play the Mario Paint Flyswatter game.",
+
+  "icons": {
+    "64": "flyicon.png"
+  },
+  "browser_action": {
+    "default_icon": "flyicon.png",
+    "default_title": "Flice Water",
+    "default_popup": "index.html"
+  },
+  "web_accessible_resources": [
+    "images/*",
+    "sounds/*"
+  ]
+}

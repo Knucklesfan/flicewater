@@ -1,107 +1,172 @@
 // import {Howl, Howler} from './howler.min.js';
 
-var mousex = 0;
-var mousey = 0;
-var deathtimer = 0;
-var textTimer = 0;
-var gameoverTimer = 0;
+var mousex:number = 0;
+var mousey:number = 0;
+var deathtimer:number = 0;
+var textTimer:number = 0;
+var gameoverTimer:number = 0;
 
-var textx = 0;
-var level = 1;
-var lives = 0;
-var swatted = 0;
-var minbugs = 4;
+var textx:number = 0;
+var level:number = 1;
+var lives:number = 0;
+var swatted:number = 0;
+var minbugs:number = 4;
 var gameStart:boolean = false;
 var gamePause:boolean = false;
 var gameOver:boolean = false;
 var marioSpawned:boolean = false;
-var hitEnemy = false;
+var hitEnemy:boolean = false;
 var mousepressed:boolean = false;
 var mousetimer:number = 0;
 var mouseframes:number = 0;
+var firstStart:boolean = true;
+var drawHitboxes:boolean = false;
+var gameSpawn:boolean = false;
+
 // put this outside the event loop..
-var canvas:HTMLCanvasElement = document.getElementById("canvas2d") as HTMLCanvasElement;
-var context = canvas!.getContext("2d");
-const flyswatter = new Image();
-flyswatter.src = 'images/cursor.png';
-const fly = new Image();
-fly.src = "images/fly.png";
-const shitter = new Image();
-shitter.src = "images/shitter.png";
+var fly:HTMLImageElement = new Image();
+var shitter:HTMLImageElement = new Image();
+var mario:HTMLImageElement = new Image();
+var luigi:HTMLImageElement = new Image();
+var digits:HTMLImageElement = new Image();
+var levelText:HTMLImageElement = new Image();
+var gameoverText:HTMLImageElement = new Image();
+var extralife:HTMLImageElement = new Image();
+var levelbackgrounds;
+var flyswatter:HTMLImageElement = new Image();
+var oneupSprite:HTMLImageElement = new Image();
+var scale:number;
+var oneupDeath:Howl;
+var swing:Howl;
+var hit:Howl;
+var die:Howl;
+var grow:Howl;
+var checkpoint:Howl;
+var flysound:Howl;
+var flyoffscreen:Howl;
+var mariohit:Howl;
+var mariooffscreen:Howl;
+var shitterhit:Howl;
+var shitteroffscreen:Howl;
+var littleshits:Howl;
+var lifenotif:Howl;
+var level1music:HTMLAudioElement;
+var level2music:HTMLAudioElement;
+var level3music:HTMLAudioElement;
+var level4music:HTMLAudioElement;
+var level5music:HTMLAudioElement;
+var level6music:HTMLAudioElement;
+var gameover:Howl;
+var congrats:Howl;
+var levelMusics;
 
-const mario = new Image();
-mario.src = "images/mario.png";
-const luigi = new Image();
-luigi.src = "images/luigi.png";
-
-const levelbackgrounds = [
-    "images/level1bg.png","images/level2bg.png","images/level3bg.png","images/level4bg.png","images/level5bg.png","images/level6bg.png"
-]
-
-const digits = new Image();
-digits.src = "images/digits.png";
-const levelText = new Image();
-levelText.src = "images/level.png";
-const gameoverText = new Image();
-gameoverText.src = "images/gameover.png"
-const oneupSprite = new Image();
-oneupSprite.src = "images/oneup.png";
-const extralife = new Image();
-extralife.src = "images/extralife.png";
-var firstStart = true;
-var drawHitboxes = false;
-var scale = 3;
-var oneupDeath = new Howl({
-    src:["sounds/1up.wav"]});
-var swing = new Howl({
-    src:["sounds/gnatattack_swing.wav"]});
-var hit = new Howl({
-    src:["sounds/gnatattack_hit.wav"]});
-var die = new Howl({
-    src:["sounds/gnatattack_die.wav"]});
-var grow = new Howl({
-    src:["sounds/mariogrow.wav"]});
-var checkpoint = new Howl({
-    src:["sounds/checkpoint.wav"]});
+var canvas:HTMLCanvasElement;
+var context:CanvasRenderingContext2D;
+function loadFlice() {
+    canvas = document.getElementById("canvas2d") as HTMLCanvasElement;
+    context = canvas!.getContext("2d");
+    flyswatter.src = 'images/cursor.png';
+    fly.src = "images/fly.png";
+    shitter.src = "images/shitter.png";
     
-var flysound = new Howl({
-    src:["sounds/gnatattack_bugdie1.wav"]});
-var flyoffscreen = new Howl({
-    src:["sounds/gnatattack_bugoffscreen1.wav"]});
-var mariohit = new Howl({
-    src:["sounds/yoshi-spit.wav"]});
-var mariooffscreen = new Howl({
-    src:["sounds/bullet.wav"]});
-var shitterhit = new Howl({
-    src:["sounds/gnatattack_bugdie2.wav"]});
-var shitteroffscreen = new Howl({
-    src:["sounds/gnatattack_bugoffscreen2.wav"]});
-var littleshits = new Howl({
-    src:["sounds/gnatattack_minibugs.wav"]});
-var lifenotif = new Howl({
-    src:["sounds/gnatattack_extralife.wav"]});
+    mario.src = "images/mario.png";
+    luigi.src = "images/luigi.png";
     
-var level1music = new Audio('sounds/level1music.mp3');
-var level2music = new Audio('sounds/level2music.mp3');
-var level3music = new Audio('sounds/level3music.mp3');
-var level4music = new Audio('sounds/level4music.mp3');
-var level5music = new Audio('sounds/level5music.mp3');
-var level6music = new Audio('sounds/level6music.mp3');
+     levelbackgrounds = [
+        "images/level1bg.png","images/level2bg.png","images/level3bg.png","images/level4bg.png","images/level5bg.png","images/level6bg.png"
+    ]
+    
+    digits.src = "images/digits.png";
+    levelText.src = "images/level.png";
+    gameoverText.src = "images/gameover.png"
+    oneupSprite.src = "images/oneup.png";
+    extralife.src = "images/extralife.png";
+    firstStart = true;
+    drawHitboxes = false;
+    scale = 3;
+     oneupDeath = new Howl({
+        src:["sounds/1up.wav"]});
+     swing = new Howl({
+        src:["sounds/gnatattack_swing.wav"]});
+     hit = new Howl({
+        src:["sounds/gnatattack_hit.wav"]});
+     die = new Howl({
+        src:["sounds/gnatattack_die.wav"]});
+     grow = new Howl({
+        src:["sounds/mariogrow.wav"]});
+     checkpoint = new Howl({
+        src:["sounds/checkpoint.wav"]});
+        
+     flysound = new Howl({
+        src:["sounds/gnatattack_bugdie1.wav"]});
+     flyoffscreen = new Howl({
+        src:["sounds/gnatattack_bugoffscreen1.wav"]});
+     mariohit = new Howl({
+        src:["sounds/yoshi-spit.wav"]});
+     mariooffscreen = new Howl({
+        src:["sounds/bullet.wav"]});
+     shitterhit = new Howl({
+        src:["sounds/gnatattack_bugdie2.wav"]});
+     shitteroffscreen = new Howl({
+        src:["sounds/gnatattack_bugoffscreen2.wav"]});
+     littleshits = new Howl({
+        src:["sounds/gnatattack_minibugs.wav"]});
+     lifenotif = new Howl({
+        src:["sounds/gnatattack_extralife.wav"]});
+        
+    level1music = new Audio('sounds/level1music.mp3');
+    level1music.addEventListener('ended', function() {
+        this.currentTime = 0;
+        this.play();
+    }, false);
 
+    level2music = new Audio('sounds/level2music.mp3');
+    level2music.addEventListener('ended', function() {
+        this.currentTime = 0;
+        this.play();
+    }, false);
 
-const levelMusics = [level1music,level2music,level3music,level4music,level5music,level6music];
-var gameover = new Howl({
-    src:["sounds/gameover.mp3"],
-});
-var congrats = new Howl({
-    src:["sounds/gnatattack_levelcomplete.wav"],
-});
+    level3music = new Audio('sounds/level3music.mp3');
+    level3music.addEventListener('ended', function() {
+        this.currentTime = 0;
+        this.play();
+    }, false);
 
-var gameSpawn = false;
-document.addEventListener('mousemove', onMouseUpdate, false);
-document.addEventListener('mouseenter', onMouseUpdate, false);
-document.addEventListener('mousedown', mousedown, false);
-document.addEventListener('mouseup', mouseup, false);
+    level4music = new Audio('sounds/level4music.mp3');
+    level4music.addEventListener('ended', function() {
+        this.currentTime = 0;
+        this.play();
+    }, false);
+
+    level5music = new Audio('sounds/level5music.mp3');
+    level5music.addEventListener('ended', function() {
+        this.currentTime = 0;
+        this.play();
+    }, false);
+
+    level6music = new Audio('sounds/level6music.mp3');
+    level6music.addEventListener('ended', function() {
+        this.currentTime = 0;
+        this.play();
+    }, false);
+
+    
+    levelMusics = [level1music,level2music,level3music,level4music,level5music,level6music];
+    gameover = new Howl({
+        src:["sounds/gameover.mp3"],
+    });
+    congrats = new Howl({
+        src:["sounds/gnatattack_levelcomplete.wav"],
+    });
+    
+    gameSpawn = false;
+    document.addEventListener('mousemove', onMouseUpdate, false);
+    document.addEventListener('mouseenter', onMouseUpdate, false);
+    document.addEventListener('mousedown', mousedown, false);
+    document.addEventListener('mouseup', mouseup, false);    
+    enemies = [new Mario(window.innerWidth+16,240)];
+    
+}
 
 function easeOutBounce(x: number): number {
     const n1 = 7.5625;
@@ -155,8 +220,6 @@ class Fly extends Enemy {
     timer: number = 0; //a timer from 0 to 360 that determines the fly's current circular tragectory
     xradius: number = 16; //the radius of the current circle the fly is flying in, resets every revolution
     yradius: number = 16; //the radius of the current circle the fly is flying in, resets every revolution
-    hitsound: HTMLAudioElement = flysound;
-    deathsound: HTMLAudioElement = flyoffscreen;
     firstRotationDone = false;
     logic(delta): void {
         if(!this.alive) {
@@ -213,6 +276,8 @@ class Fly extends Enemy {
         this.active = true;
         this.xradius = (1-(Math.random()*2))*16
         this.yradius = (1-(Math.random()*2))*16
+        this.hitsound = flysound;
+        this.deathsound = flyoffscreen;
 }
 
 }
@@ -278,8 +343,6 @@ class oneUp extends Enemy {
     w = 16;
     h = 16;
     frame = 0;
-    hitsound = checkpoint;
-    deathsound = lifenotif;
     image = oneupSprite;
     override = false;
     render() {
@@ -308,6 +371,8 @@ class oneUp extends Enemy {
         this.y=y;
         this.override = override;
         lifenotif.play();
+        this.hitsound = checkpoint;
+        this.deathsound = null;
 
     }
     
@@ -320,8 +385,6 @@ class Mario extends Enemy {
     h = 32
     kills = false;
     image = marioSprites[Math.floor(Math.random()*2)];
-    hitsound = mariohit;
-    deathsound = mariooffscreen;
     logic(delta): void {
         if(this.alive && this.active) {
             if(this.x > window.innerWidth/2-8*scale) {
@@ -364,7 +427,9 @@ class Mario extends Enemy {
         this.alive = true;
         this.active = true;
         firstStart = true
-
+        this.hitsound = mariohit;
+        this.deathsound = mariooffscreen;
+    
     } 
 
 }
@@ -376,8 +441,6 @@ class Shitter extends Enemy { //I can this one the shitter because it shits out 
     timer: number = 0; //a timer from 0 to 360 that determines the fly's current circular tragectory
     shittimer: number = 0; //a timer from 0 to however long that determines the grace period while it takes a shit
     xradius: number = 16; //the radius of the current circle the fly is flying in, resets every revolution
-    hitsound: HTMLAudioElement = shitterhit;
-    deathsound: HTMLAudioElement = shitteroffscreen;
     firstRotationDone = false;
     kills = false;
     logic(delta): void {
@@ -446,6 +509,9 @@ class Shitter extends Enemy { //I can this one the shitter because it shits out 
         this.alive = true;
         this.active = true;
         this.xradius = (1-(Math.random()*2))*18
+        this.hitsound = shitterhit;
+        this.deathsound = shitteroffscreen;
+    
 }
 
 }
@@ -459,8 +525,6 @@ class LittleShit extends Enemy {
     angle: number =  0;
     kills = true;
 
-    hitsound: HTMLAudioElement = flysound;
-    deathsound: HTMLAudioElement = flyoffscreen;
     firstRotationDone = false;
     logic(delta): void {
         if(this.timer < 90) {
@@ -522,11 +586,14 @@ class LittleShit extends Enemy {
         this.y = y;
         this.alive = true;
         this.active = true;
+        this.hitsound = flysound;
+        this.deathsound = flyoffscreen;
+    
 }
 
 }
 
-var enemies: Enemy[] = [new Mario(window.innerWidth+16,240)];
+var enemies: Enemy[];
 
 function renderdigit(digit:number,x:number,y:number,center:boolean) {
     let string = digit.toString();
@@ -559,7 +626,9 @@ function mousedown(e) {
                 mousetimer=40;
                 hitEnemy = true;
                 enemy.alive = false;
-                (enemy.hitsound).play();
+                if(enemy.hitsound != null) {
+                    (enemy.hitsound).play();
+                }
 
             }
             
@@ -585,7 +654,9 @@ function logic(delta) {
     enemies.forEach(function(enemy) {
         enemy.logic(delta);
         if(!enemy.active) {
-            (enemy.deathsound).play();
+            if(enemy.deathsound != null) {
+                (enemy.deathsound).play();
+            }
             enemies.splice(enemies.indexOf(enemy),1);
             if(swatted > 10) {
                 minbugs=8
@@ -773,4 +844,6 @@ function loop(timestamp) {
     window.requestAnimationFrame(loop)
   }
   var lastRender = 0
-  window.requestAnimationFrame(loop)
+  function startFlice() {
+    window.requestAnimationFrame(loop)
+}
